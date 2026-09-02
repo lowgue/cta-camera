@@ -1,0 +1,45 @@
+###############################################
+# Docker Compose — Frigate NVR
+# Sistema de Vigia do Laboratório (CTA)
+###############################################
+
+services:
+  frigate:
+    container_name: frigate
+    image: ghcr.io/blakeblackshear/frigate:stable
+    restart: unless-stopped
+
+    # Acesso privilegiado ao hardware (câmera, GPU)
+    privileged: true
+
+    # Acesso aos dispositivos de vídeo e tmpfs para
+    # cache de detecção (evita desgaste do SD card)
+    shm_size: "256mb"
+    tmpfs:
+      - /tmp/cache:rw,exec,size=256m
+
+    volumes:
+      # Configuração do Frigate
+      - ./config/frigate.yml:/config/config.yml:ro
+      # Diretório de gravações (persistente)
+      - ./storage/recordings:/media/frigate/recordings
+      # Diretório de snapshots (persistente)
+      - ./storage/snapshots:/media/frigate/clips
+
+    ports:
+      # Interface web do Frigate
+      - "5000:5000"
+      # Porta RTSP interna do Frigate (para re-stream)
+      - "8971:8971"
+
+    environment:
+      # Timezone do Brasil
+      - TZ=America/Sao_Paulo
+
+    # Healthcheck para auto-restart se travar
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/api/version"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
