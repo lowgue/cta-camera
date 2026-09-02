@@ -281,7 +281,40 @@ journalctl -u camera -f
 
 ---
 
-## 12. Troubleshooting
+## 12. Acesso Público Seguro (Tailscale Funnel)
+
+Se você quiser que outras pessoas do laboratório acessem o vídeo pelo
+navegador, **sem precisarem instalar o Tailscale**, use o Tailscale Funnel
+para criar um link HTTPS público.
+
+1. **Ative o Funnel na sua conta:**
+   - Acesse o [Tailscale Admin Console](https://login.tailscale.com/admin/acls).
+   - Na aba "Access Controls", garanta que o nó `nodeAttrs` permite o Funnel.
+     (Normalmente já vem uma opção na interface web para ativar o Funnel).
+
+2. **Ative no Raspberry Pi:**
+   Vamos expor a porta 8889 (WebRTC) para a internet:
+   ```bash
+   sudo tailscale funnel 8889
+   ```
+
+3. **Compartilhe o Link:**
+   O comando acima manterá o túnel aberto e exibirá a URL pública, algo como:
+   👉 `https://raspberrypi.sua-rede.ts.net`
+
+4. **Como Acessar:**
+   - Envie a URL gerada (acrescentada de `/lab`) para o pessoal do laboratório:
+     `https://raspberrypi.sua-rede.ts.net/lab`
+   - Ao acessar, o navegador pedirá um **Usuário** e **Senha**.
+   - Eles devem digitar as credenciais de leitura (`readUser` e `readPass`)
+     configuradas no `mediamtx.yml`. O vídeo aparecerá em seguida!
+
+> 💡 Dica: Para rodar o funnel em background e iniciar junto com o sistema,
+> execute: `sudo tailscale serve https / http://127.0.0.1:8889`
+
+---
+
+## 13. Troubleshooting
 
 ### A câmera não é detectada
 
@@ -327,7 +360,7 @@ journalctl -u camera -n 100 --no-pager
 
 ---
 
-## 13. Próxima Etapa (Fora Deste Runbook)
+## 14. Próxima Etapa (Fora Deste Runbook)
 
 Com o live estável, o próximo passo é instalar o **Frigate NVR** apontando
 para este mesmo stream RTSP (`rtsp://localhost:8554/lab`), para adicionar:
