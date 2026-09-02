@@ -1,0 +1,11 @@
+# Binários
+mediamtx
+*.tar.gz
+
+# Configuração com senhas reais (nunca commitar)
+# O template em config/mediamtx.yml contém apenas placeholders
+mediamtx.yml.local
+
+# OS
+.DS_Store
+Thumbs.db

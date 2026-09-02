@@ -1,0 +1,21 @@
+[Unit]
+Description=MediaMTX Streaming Server
+Documentation=https://github.com/bluenviron/mediamtx
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/home/pi/mediamtx /home/pi/mediamtx.yml
+WorkingDirectory=/home/pi
+Restart=always
+RestartSec=5
+User=pi
+
+# Hardening básico
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=/home/pi
+
+[Install]
+WantedBy=multi-user.target

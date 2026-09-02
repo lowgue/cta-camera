@@ -1,0 +1,34 @@
+###############################################
+# MediaMTX — Configuração do Streaming Server
+# Sistema de Vigia do Laboratório (CTA)
+###############################################
+
+# ── Endereços dos protocolos ──────────────────
+
+# RTSP (Real-Time Streaming Protocol)
+# Usado para publicar e consumir o stream via clientes como VLC
+rtspAddress: :8554
+
+# HLS (HTTP Live Streaming)
+# Permite assistir o stream via navegador web (maior compatibilidade)
+hls: yes
+hlsAddress: :8888
+
+# WebRTC (Web Real-Time Communication)
+# Permite assistir o stream via navegador com menor latência
+webrtc: yes
+webrtcAddress: :8889
+
+# ── Caminhos (Streams) ───────────────────────
+
+paths:
+  lab:
+    # ── Autenticação para PUBLICAR o stream ──
+    # Usado pelo script start_camera.sh para enviar o vídeo ao MediaMTX
+    publishUser: publicador
+    publishPass: TROCAR_SENHA_FORTE
+
+    # ── Autenticação para ASSISTIR o stream ──
+    # Usado por clientes (VLC, navegador, etc.) para visualizar o vídeo
+    readUser: usuario
+    readPass: TROCAR_SENHA_FORTE
