@@ -11,11 +11,11 @@ Restart=always
 RestartSec=5
 User=pi
 
-# Hardening básico
+# Hardening básico (compatível com Raspberry Pi OS)
+# Nota: ProtectSystem=strict e ProtectHome=read-only foram removidos
+# porque dependem de mount namespaces, que podem não estar habilitados
+# no kernel do Raspberry Pi (causa erro 226/NAMESPACE).
 NoNewPrivileges=true
-ProtectSystem=strict
-ProtectHome=read-only
-ReadWritePaths=/home/pi
 
 [Install]
 WantedBy=multi-user.target
