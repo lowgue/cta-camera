@@ -35,14 +35,24 @@ echo "[3/5] Baixando e instalando MediaMTX..."
 ARCH=$(uname -m)
 if [ "$ARCH" = "aarch64" ]; then PKG="arm64v8"; else PKG="armv7"; fi
 
-# Pegar a última versão do GitHub
-LATEST_RELEASE=$(curl -s https://api.github.com/repos/bluenviron/mediamtx/releases/latest | jq -r '.tag_name')
-if [ -z "$LATEST_RELEASE" ] || [ "$LATEST_RELEASE" = "null" ]; then
-  LATEST_RELEASE="v1.8.0" # Fallback caso falhe a API
+# Pegar a URL de download correta da última release
+echo "  -> Buscando última versão..."
+DOWNLOAD_URL=$(curl -s https://api.github.com/repos/bluenviron/mediamtx/releases/latest | jq -r ".assets[] | select(.name | test(\"linux_${PKG}.tar.gz$\")) | .browser_download_url" | head -n 1)
+
+if [ -z "$DOWNLOAD_URL" ] || [ "$DOWNLOAD_URL" = "null" ]; then
+  echo "⚠️ Falha ao obter a URL pela API, usando link estático de fallback (v1.9.0)..."
+  DOWNLOAD_URL="https://github.com/bluenviron/mediamtx/releases/download/v1.9.0/mediamtx_v1.9.0_linux_${PKG}.tar.gz"
 fi
 
-echo "  -> Versão detectada: $LATEST_RELEASE ($PKG)"
-curl -L -s -o /tmp/mediamtx.tar.gz "https://github.com/bluenviron/mediamtx/releases/download/${LATEST_RELEASE}/mediamtx_linux_${PKG}.tar.gz"
+echo "  -> Baixando: $DOWNLOAD_URL"
+curl -L -s -o /tmp/mediamtx.tar.gz "$DOWNLOAD_URL"
+
+# Verifica se o arquivo baixado é realmente um gzip
+if ! file /tmp/mediamtx.tar.gz | grep -q "gzip compressed data"; then
+  echo "❌ Erro: O arquivo baixado não é um pacote válido (provavelmente erro 404). URL acessada: $DOWNLOAD_URL"
+  exit 1
+fi
+
 tar -xzf /tmp/mediamtx.tar.gz -C "$BIN_DIR" mediamtx
 rm -f /tmp/mediamtx.tar.gz
 chmod +x "$BIN_DIR/mediamtx"
