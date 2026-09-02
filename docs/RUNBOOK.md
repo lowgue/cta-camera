@@ -45,23 +45,7 @@ sudo reboot
 
 ---
 
-## 3. Instalar Dependências
-
-```bash
-sudo apt update
-sudo apt install -y ffmpeg v4l-utils libcamera-apps git curl
-```
-
-**Validação:**
-
-```bash
-ffmpeg -version     # deve imprimir a versão do FFmpeg
-v4l2-ctl --version  # deve imprimir a versão do v4l-utils
-```
-
----
-
-## 4. Habilitar Suporte a Câmera CSI (Camera Module)
+## 3. Habilitar Suporte a Câmera CSI (Camera Module)
 
 Mesmo sem a câmera conectada, deixe a interface habilitada:
 
@@ -79,126 +63,30 @@ retornar `0` (habilitado).
 
 ---
 
-## 5. Instalar o MediaMTX
+## 4. Instalação Automatizada
+
+Para simplificar o setup, o repositório conta com um script que baixa o MediaMTX,
+instala as dependências, copia as configurações e cria os serviços systemd
+automaticamente.
+
+Execute na pasta raiz do repositório clonado:
 
 ```bash
-cd ~
-ARCH=$(uname -m)
-if [ "$ARCH" = "aarch64" ]; then PKG="arm64v8"; else PKG="armv7"; fi
-
-curl -L -o mediamtx.tar.gz \
-  "https://github.com/bluenviron/mediamtx/releases/latest/download/mediamtx_linux_${PKG}.tar.gz"
-tar -xzf mediamtx.tar.gz
-rm mediamtx.tar.gz
+chmod +x scripts/install.sh
+sudo ./scripts/install.sh
 ```
 
-**Validação:**
+**O que o script faz:**
+1. Instala `ffmpeg`, `v4l-utils`, e `libcamera-apps`.
+2. Baixa e instala a versão correta do MediaMTX para sua arquitetura em `/opt/cta-camera/bin`.
+3. Copia `mediamtx.yml` para `/opt/cta-camera/config/`.
+4. Copia `start_camera.sh` para `/opt/cta-camera/bin/`.
+5. Cria e inicia os serviços systemd (`mediamtx.service` e `camera.service`).
 
-```bash
-ls ~/mediamtx       # o binário deve existir
-~/mediamtx --help   # deve imprimir a ajuda do MediaMTX
-```
-
----
-
-## 6. Configurar o MediaMTX
-
-Copie o arquivo de configuração do repositório:
-
-```bash
-cp /caminho/do/repo/cta-camera/config/mediamtx.yml ~/mediamtx.yml
-```
-
-Ou crie manualmente:
-
-```bash
-nano ~/mediamtx.yml
-```
-
-> ⚠️ **IMPORTANTE:** edite o arquivo e troque **todas** as senhas de exemplo
-> (`TROCAR_SENHA_FORTE`) por senhas fortes e únicas antes de prosseguir.
-
-A configuração habilita:
-- **RTSP** na porta `8554`
-- **HLS** na porta `8888`
-- **WebRTC** na porta `8889`
-- **Autenticação** para publicação e leitura do stream
-
-Consulte [config/mediamtx.yml](../config/mediamtx.yml) para ver o template
-completo.
-
-**Validação:**
-
-```bash
-# Inicie o MediaMTX manualmente para testar
-~/mediamtx ~/mediamtx.yml &
-# Deve imprimir logs de inicialização sem erros
-# Depois pare com:
-kill %1
-```
-
----
-
-## 7. Script de Captura da Câmera
-
-Copie o script do repositório:
-
-```bash
-cp /caminho/do/repo/cta-camera/scripts/start_camera.sh ~/start_camera.sh
-chmod +x ~/start_camera.sh
-```
-
-> ⚠️ **IMPORTANTE:** edite o script e troque a senha de publicação
-> (`TROCAR_SENHA_FORTE`) pela mesma senha usada em `mediamtx.yml` para o
-> campo `publishPass`.
-
-O script funciona assim:
-
-1. Fica em loop verificando se `/dev/video0` existe.
-2. Quando a câmera é conectada, tenta capturar com H264 nativo (melhor
-   desempenho para Camera Module e algumas webcams).
-3. Se falhar, faz fallback para recodificação via `libx264` com preset
-   `ultrafast` e `zerolatency`.
-
-Consulte [scripts/start_camera.sh](../scripts/start_camera.sh) para ver o
-script completo.
-
-**Validação:** execute `~/start_camera.sh` manualmente — sem câmera, deve
-imprimir `"Aguardando câmera em /dev/video0..."` em loop.
-
----
-
-## 8. Criar os Serviços systemd
-
-Copie os arquivos de serviço do repositório:
-
-```bash
-sudo cp /caminho/do/repo/cta-camera/systemd/mediamtx.service /etc/systemd/system/
-sudo cp /caminho/do/repo/cta-camera/systemd/camera.service /etc/systemd/system/
-```
-
-Ative e inicie:
-
-```bash
-sudo systemctl daemon-reload
-sudo systemctl enable mediamtx camera
-sudo systemctl start mediamtx camera
-```
-
-Os serviços garantem:
-
-| Recurso | Descrição |
-|---|---|
-| **Auto-start** | Iniciam automaticamente no boot |
-| **Auto-restart** | Reiniciam em 5 segundos se cairem |
-| **Dependência** | `camera.service` só inicia após `mediamtx.service` |
-
-**Validação:**
-
-```bash
-sudo systemctl status mediamtx   # deve estar "active (running)"
-sudo systemctl status camera     # deve estar "active (running)"
-```
+> ⚠️ **IMPORTANTE (Após a instalação):** 
+> Edite os arquivos `/opt/cta-camera/config/mediamtx.yml` e `/opt/cta-camera/bin/start_camera.sh` 
+> para trocar as senhas padrão (`TROCAR_SENHA_FORTE`). Após editar, reinicie os serviços com:
+> `sudo systemctl restart mediamtx camera`
 
 ---
 

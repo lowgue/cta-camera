@@ -25,40 +25,78 @@ echo "========================================="
 echo " CTA-Camera — Captura de Vídeo"
 echo "========================================="
 echo ""
-echo "Aguardando câmera em $DEVICE..."
 
-while [ ! -e "$DEVICE" ]; do
+# Função para iniciar streaming
+iniciar_streaming() {
+  echo "Iniciando transmissão..."
+  echo ""
+
+  # Tentativa 1: libcamera (rpicam-vid)
+  # Novo padrão no Raspberry Pi OS (Bullseye/Bookworm) para módulos oficiais CSI
+  if command -v rpicam-vid &> /dev/null; then
+    echo "Usando rpicam-vid (libcamera) para melhor performance nativa..."
+    # --inline injeta cabeçalhos SPS/PPS no stream de bytes H264 (necessário p/ RTSP)
+    rpicam-vid -t 0 --inline --width 1280 --height 720 --framerate "$FRAMERATE" -o - | \
+      ffmpeg -f h264 -i - -c:v copy -f rtsp "$RTSP_URL"
+    return $?
+  fi
+
+  # Tentativa 2: libcamera-vid (versões antigas do libcamera)
+  if command -v libcamera-vid &> /dev/null; then
+    echo "Usando libcamera-vid para melhor performance nativa..."
+    libcamera-vid -t 0 --inline --width 1280 --height 720 --framerate "$FRAMERATE" -o - | \
+      ffmpeg -f h264 -i - -c:v copy -f rtsp "$RTSP_URL"
+    return $?
+  fi
+
+  # Tentativa 3: V4L2 nativo assumindo saída H264
+  # (Webcams USB compatíveis ou setup antigo)
+  echo "Fazendo fallback para v4l2 com cópia H264..."
+  ffmpeg \
+    -f v4l2 \
+    -input_format h264 \
+    -video_size "$RESOLUTION" \
+    -framerate "$FRAMERATE" \
+    -i "$DEVICE" \
+    -c:v copy \
+    -f rtsp \
+    "$RTSP_URL" || \
+  
+  # Tentativa 4: V4L2 recodificando por software (último caso)
+  echo "Fazendo fallback para v4l2 com recodificação de software..."
+  ffmpeg \
+    -f v4l2 \
+    -video_size "$RESOLUTION" \
+    -framerate "$FRAMERATE" \
+    -i "$DEVICE" \
+    -c:v libx264 \
+    -preset ultrafast \
+    -tune zerolatency \
+    -f rtsp \
+    "$RTSP_URL"
+}
+
+# ── Fluxo principal ──────────────────────────
+while true; do
+  # Se rpicam-vid ou libcamera-vid estiverem presentes, não precisamos estritamente aguardar /dev/video0,
+  # mas aguardamos a câmera ser detectada via libcamera-hello.
+  if command -v rpicam-hello &> /dev/null; then
+    echo "Procurando câmera via rpicam-hello..."
+    if rpicam-hello --list-cameras | grep -q "Available cameras"; then
+       echo "Câmera libcamera detectada!"
+       iniciar_streaming || echo "Falha na transmissão, reiniciando..."
+    else
+       sleep "$RETRY_INTERVAL"
+    fi
+  else
+    # Fallback para aguardar dispositivo v4l2
+    echo "Aguardando câmera em $DEVICE..."
+    if [ -e "$DEVICE" ]; then
+      echo "Câmera detectada em $DEVICE!"
+      iniciar_streaming || echo "Falha na transmissão, reiniciando..."
+    else
+      sleep "$RETRY_INTERVAL"
+    fi
+  fi
   sleep "$RETRY_INTERVAL"
 done
-
-echo "Câmera detectada em $DEVICE!"
-echo "Iniciando transmissão..."
-echo ""
-
-# ── Iniciar transmissão ──────────────────────
-
-# Tenta primeiro assumindo saída H264 nativa
-# (Camera Module v2/v3 / algumas webcams USB)
-# Isso é mais eficiente pois não precisa recodificar
-ffmpeg \
-  -f v4l2 \
-  -input_format h264 \
-  -video_size "$RESOLUTION" \
-  -framerate "$FRAMERATE" \
-  -i "$DEVICE" \
-  -c:v copy \
-  -f rtsp \
-  "$RTSP_URL" \
-|| \
-# Fallback: câmera sem H264 nativo
-# Recodifica via software (usa mais CPU)
-ffmpeg \
-  -f v4l2 \
-  -video_size "$RESOLUTION" \
-  -framerate "$FRAMERATE" \
-  -i "$DEVICE" \
-  -c:v libx264 \
-  -preset ultrafast \
-  -tune zerolatency \
-  -f rtsp \
-  "$RTSP_URL"

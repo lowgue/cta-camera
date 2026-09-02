@@ -50,24 +50,14 @@ completo.
 Resumo rápido (após clonar no Raspberry Pi):
 
 ```bash
-# 1. Copiar os arquivos de configuração
-cp config/mediamtx.yml ~/mediamtx.yml
-cp scripts/start_camera.sh ~/start_camera.sh
-chmod +x ~/start_camera.sh
-
-# 2. Instalar os serviços systemd
-sudo cp systemd/mediamtx.service /etc/systemd/system/
-sudo cp systemd/camera.service /etc/systemd/system/
-sudo systemctl daemon-reload
-sudo systemctl enable mediamtx camera
-sudo systemctl start mediamtx camera
-
-# 3. Verificar
-sudo systemctl status mediamtx camera
+# Executar a instalação automatizada (baixa o MediaMTX e cria os serviços systemd)
+chmod +x scripts/install.sh
+sudo ./scripts/install.sh
 ```
 
-> ⚠️ **Antes de usar:** edite `mediamtx.yml` e `start_camera.sh` para trocar
-> as senhas de exemplo (`TROCAR_SENHA_FORTE`).
+> ⚠️ **Antes de usar:** edite `/opt/cta-camera/config/mediamtx.yml` e
+> `/opt/cta-camera/bin/start_camera.sh` para trocar as senhas de exemplo
+> (`TROCAR_SENHA_FORTE`). Após a alteração, rode `sudo systemctl restart mediamtx camera`.
 
 ## Acesso ao Stream
 
