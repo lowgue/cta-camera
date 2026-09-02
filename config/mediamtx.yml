@@ -26,9 +26,10 @@ paths:
     # ── Autenticação para PUBLICAR o stream ──
     # Usado pelo script start_camera.sh para enviar o vídeo ao MediaMTX
     publishUser: publicador
-    publishPass: TROCAR_SENHA_FORTE
+    publishPass: senha
 
     # ── Autenticação para ASSISTIR o stream ──
-    # Usado por clientes (VLC, navegador, etc.) para visualizar o vídeo
-    readUser: usuario
-    readPass: TROCAR_SENHA_FORTE
+    # Removida: o acesso à rede já é protegido pelo Tailscale.
+    # Se precisar reativar, descomente as linhas abaixo:
+    # readUser: usuario
+    # readPass: senha

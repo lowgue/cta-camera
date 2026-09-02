@@ -15,7 +15,7 @@ set -euo pipefail
 
 # ── Configuração ─────────────────────────────
 DEVICE="/dev/video0"
-RTSP_URL="rtsp://publicador:TROCAR_SENHA_FORTE@localhost:8554/lab"
+RTSP_URL="rtsp://publicador:senha@localhost:8554/lab"
 RESOLUTION="1280x720"
 FRAMERATE="30"
 RETRY_INTERVAL=3   # segundos entre verificações da câmera
@@ -37,7 +37,7 @@ iniciar_streaming() {
     echo "Usando rpicam-vid (libcamera) para melhor performance nativa..."
     # --inline injeta cabeçalhos SPS/PPS no stream de bytes H264 (necessário p/ RTSP)
     rpicam-vid -t 0 --inline --width 1280 --height 720 --framerate "$FRAMERATE" -o - | \
-      ffmpeg -f h264 -i - -c:v copy -f rtsp "$RTSP_URL"
+      ffmpeg -f h264 -i - -c:v copy -rtsp_transport tcp -f rtsp "$RTSP_URL"
     return $?
   fi
 
@@ -45,7 +45,7 @@ iniciar_streaming() {
   if command -v libcamera-vid &> /dev/null; then
     echo "Usando libcamera-vid para melhor performance nativa..."
     libcamera-vid -t 0 --inline --width 1280 --height 720 --framerate "$FRAMERATE" -o - | \
-      ffmpeg -f h264 -i - -c:v copy -f rtsp "$RTSP_URL"
+      ffmpeg -f h264 -i - -c:v copy -rtsp_transport tcp -f rtsp "$RTSP_URL"
     return $?
   fi
 
@@ -59,6 +59,7 @@ iniciar_streaming() {
     -framerate "$FRAMERATE" \
     -i "$DEVICE" \
     -c:v copy \
+    -rtsp_transport tcp \
     -f rtsp \
     "$RTSP_URL" || \
   
@@ -72,6 +73,7 @@ iniciar_streaming() {
     -c:v libx264 \
     -preset ultrafast \
     -tune zerolatency \
+    -rtsp_transport tcp \
     -f rtsp \
     "$RTSP_URL"
 }
