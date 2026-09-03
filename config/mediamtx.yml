@@ -29,6 +29,7 @@ paths:
     sourceOnDemand: yes
     rpiCameraWidth: 1280
     rpiCameraHeight: 720
+    rpiCameraFPS: 30
     
     # ── Autenticação para ASSISTIR o stream ──
     # O acesso à rede já é protegido pelo Tailscale.
