@@ -5,11 +5,11 @@ After=network-online.target tailscaled.service
 Wants=network-online.target tailscaled.service
 [Service]
 Type=simple
-ExecStart=/home/pi/mediamtx /home/pi/mediamtx.yml
-WorkingDirectory=/home/pi
+ExecStart=/opt/cta-camera/bin/mediamtx /opt/cta-camera/config/mediamtx.yml
+WorkingDirectory=/opt/cta-camera
 Restart=always
 RestartSec=5
-User=pi
+SupplementaryGroups=video
 
 # Hardening básico (compatível com Raspberry Pi OS)
 # Nota: ProtectSystem=strict e ProtectHome=read-only foram removidos

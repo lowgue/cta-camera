@@ -65,19 +65,6 @@ cp config/mediamtx.yml "$CONFIG_DIR/mediamtx.yml"
 echo "[5/5] Instalando serviços systemd..."
 cp systemd/mediamtx.service /etc/systemd/system/
 
-# Ajustando caminhos nos arquivos systemd para a nova estrutura (garantia)
-sed -i "s|/home/pi/mediamtx|$BIN_DIR/mediamtx|g" /etc/systemd/system/mediamtx.service
-sed -i "s|/home/pi/mediamtx.yml|$CONFIG_DIR/mediamtx.yml|g" /etc/systemd/system/mediamtx.service
-sed -i "s|WorkingDirectory=/home/pi|WorkingDirectory=$INSTALL_DIR|g" /etc/systemd/system/mediamtx.service
-
-# Removendo referência hardcoded do usuário 'pi' caso ele não exista ou para usar root no serviço
-sed -i '/User=pi/d' /etc/systemd/system/mediamtx.service
-
-# Acesso ao grupo video (necessário para o rpiCamera nativo)
-if ! grep -q "SupplementaryGroups=video" /etc/systemd/system/mediamtx.service; then
-  sed -i '/\[Service\]/a SupplementaryGroups=video' /etc/systemd/system/mediamtx.service
-fi
-
 # Ativando os serviços
 systemctl daemon-reload
 systemctl enable mediamtx
