@@ -26,6 +26,7 @@ paths:
     # ── Fonte (Câmera do Raspberry Pi) ───────
     # Utiliza a integração nativa com libcamera (rpicam)
     source: rpiCamera
+    sourceOnDemand: yes
     rpiCameraWidth: 1280
     rpiCameraHeight: 720
     
