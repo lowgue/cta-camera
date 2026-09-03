@@ -77,16 +77,15 @@ sudo ./scripts/install.sh
 ```
 
 **O que o script faz:**
-1. Instala `ffmpeg`, `v4l-utils`, e `libcamera-apps`.
+1. Instala `ffmpeg` (ferramentas auxiliares), `v4l-utils`, e `libcamera-apps`.
 2. Baixa e instala a versão correta do MediaMTX para sua arquitetura em `/opt/cta-camera/bin`.
 3. Copia `mediamtx.yml` para `/opt/cta-camera/config/`.
-4. Copia `start_camera.sh` para `/opt/cta-camera/bin/`.
-5. Cria e inicia os serviços systemd (`mediamtx.service` e `camera.service`).
+4. Cria e inicia o serviço systemd (`mediamtx.service`).
 
 > ⚠️ **IMPORTANTE (Após a instalação):** 
-> Edite os arquivos `/opt/cta-camera/config/mediamtx.yml` e `/opt/cta-camera/bin/start_camera.sh` 
-> para trocar as senhas padrão (`TROCAR_SENHA_FORTE`). Após editar, reinicie os serviços com:
-> `sudo systemctl restart mediamtx camera`
+> Edite o arquivo `/opt/cta-camera/config/mediamtx.yml` caso precise ajustar
+> parâmetros como resolução. Após editar, reinicie o serviço com:
+> `sudo systemctl restart mediamtx`
 
 ---
 
@@ -121,15 +120,7 @@ Execute todos os comandos abaixo e confirme os resultados esperados:
 sudo systemctl status mediamtx
 # Esperado: "active (running)"
 
-# 2. Serviço de câmera em espera
-sudo systemctl status camera
-# Esperado: "active (running)"
-
-# 3. Logs mostrando espera pela câmera
-journalctl -u camera -f
-# Esperado: "Aguardando câmera em /dev/video0..." repetindo
-
-# 4. Tailscale conectado
+# 2. Tailscale conectado
 tailscale status
 # Esperado: Pi listado e online
 ```
@@ -142,8 +133,9 @@ Se tudo estiver correto, o sistema está **pronto para receber a câmera**.
 
 Assim que a câmera física for plugada:
 
-1. O serviço `camera.service` detecta o `/dev/video0` **automaticamente** e
-   inicia a transmissão sozinho (não precisa reiniciar nada).
+1. O MediaMTX detecta a câmera **automaticamente** via API libcamera e inicia 
+   a transmissão local no momento em que alguém acessa (ou de imediato, caso 
+   configure acesso constante).
 
 2. Acesse o live via qualquer dispositivo dentro da rede Tailscale:
 
@@ -151,20 +143,17 @@ Assim que a câmera física for plugada:
 |---|---|---|
 | **HLS** | `http://<IP_TAILSCALE>:8888/lab` | Navegador (compatibilidade ampla) |
 | **WebRTC** | `http://<IP_TAILSCALE>:8889/lab` | Navegador (menor latência) |
-| **RTSP** | `rtsp://usuario:SENHA@<IP_TAILSCALE>:8554/lab` | VLC, apps de câmera |
+| **RTSP** | `rtsp://<IP_TAILSCALE>:8554/lab` | VLC, apps de câmera |
 
 **Validação:**
 
-```bash
-# Verificar que a câmera foi detectada
+# Verificar que a câmera foi detectada pelo sistema
 v4l2-ctl --list-devices
+libcamera-hello --list-cameras
 
-# Verificar que o FFmpeg está rodando
-ps aux | grep ffmpeg
-
-# Verificar logs do serviço
-journalctl -u camera -f
-# Esperado: "Câmera detectada. Iniciando transmissão..."
+# Verificar logs do serviço MediaMTX
+journalctl -u mediamtx -f
+# Esperado: "rtsp server created" e acesso a /lab
 ```
 
 ---
@@ -218,11 +207,11 @@ libcamera-hello --list-cameras
 ### O stream não inicia
 
 ```bash
-# Ver logs detalhados do FFmpeg
-journalctl -u camera -n 50 --no-pager
+# Ver logs detalhados do MediaMTX
+journalctl -u mediamtx -n 50 --no-pager
 
-# Testar FFmpeg manualmente
-ffmpeg -f v4l2 -list_formats all -i /dev/video0
+# Verificar se a câmera está ocupada por outro processo
+lsof /dev/video0
 ```
 
 ### Não consigo acessar remotamente
@@ -243,7 +232,6 @@ ss -tlnp | grep -E '8554|8888|8889'
 ```bash
 # Ver últimas 100 linhas de log
 journalctl -u mediamtx -n 100 --no-pager
-journalctl -u camera -n 100 --no-pager
 ```
 
 ---

@@ -1,8 +1,8 @@
 [Unit]
 Description=MediaMTX Streaming Server
 Documentation=https://github.com/bluenviron/mediamtx
-After=network.target
-
+After=network-online.target tailscaled.service
+Wants=network-online.target tailscaled.service
 [Service]
 Type=simple
 ExecStart=/home/pi/mediamtx /home/pi/mediamtx.yml
