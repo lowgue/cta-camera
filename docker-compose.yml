@@ -36,6 +36,9 @@ services:
       # Timezone do Brasil
       - TZ=America/Sao_Paulo
 
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
     # Healthcheck para auto-restart se travar
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5000/api/version"]

@@ -102,14 +102,13 @@ de leitura do MediaMTX:
 nano config/frigate.yml
 ```
 
-No bloco `cameras.lab.ffmpeg.inputs`, troque a URL:
+No bloco `cameras.lab.ffmpeg.inputs`, se você ativou a autenticação no `mediamtx.yml`, troque a URL para incluir as credenciais:
 
 ```yaml
-- path: rtsp://usuario:SUA_SENHA_REAL@localhost:8554/lab
+- path: rtsp://usuario:SUA_SENHA_REAL@host.docker.internal:8554/lab
 ```
 
-Use o **mesmo `readUser` e `readPass`** que você configurou no `mediamtx.yml`
-na Etapa 1.
+> **Nota:** O endereço `host.docker.internal` é usado em vez de `localhost` para que o container do Frigate acesse o serviço do MediaMTX rodando no sistema host. Se você **não** ativou senha no MediaMTX (que é o padrão), basta manter `rtsp://host.docker.internal:8554/lab`.
 
 ---
 

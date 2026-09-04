@@ -40,7 +40,8 @@ cameras:
     # Conecta ao stream RTSP local do MediaMTX
     ffmpeg:
       inputs:
-        - path: rtsp://usuario:TROCAR_SENHA_FORTE@localhost:8554/lab
+        # Se ativou senha no MediaMTX: rtsp://usuario:senha@host.docker.internal:8554/lab
+        - path: rtsp://host.docker.internal:8554/lab
           roles:
             - detect
             - record
