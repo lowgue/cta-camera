@@ -23,12 +23,16 @@ webrtcAddress: :8889
 
 paths:
   lab:
-    # ── Autenticação para PUBLICAR o stream ──
-    # Usado pelo script start_camera.sh para enviar o vídeo ao MediaMTX
-    publishUser: publicador
-    publishPass: TROCAR_SENHA_FORTE
-
+    # ── Fonte (Câmera do Raspberry Pi) ───────
+    # Utiliza a integração nativa com libcamera (rpicam)
+    source: rpiCamera
+    sourceOnDemand: yes
+    rpiCameraWidth: 1280
+    rpiCameraHeight: 720
+    rpiCameraFPS: 30
+    
     # ── Autenticação para ASSISTIR o stream ──
-    # Usado por clientes (VLC, navegador, etc.) para visualizar o vídeo
-    readUser: usuario
-    readPass: TROCAR_SENHA_FORTE
+    # O acesso à rede já é protegido pelo Tailscale.
+    # Se precisar reativar, descomente as linhas abaixo:
+    # readUser: usuario
+    # readPass: senha

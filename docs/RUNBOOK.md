@@ -45,23 +45,7 @@ sudo reboot
 
 ---
 
-## 3. Instalar Dependências
-
-```bash
-sudo apt update
-sudo apt install -y ffmpeg v4l-utils libcamera-apps git curl
-```
-
-**Validação:**
-
-```bash
-ffmpeg -version     # deve imprimir a versão do FFmpeg
-v4l2-ctl --version  # deve imprimir a versão do v4l-utils
-```
-
----
-
-## 4. Habilitar Suporte a Câmera CSI (Camera Module)
+## 3. Habilitar Suporte a Câmera CSI (Camera Module)
 
 Mesmo sem a câmera conectada, deixe a interface habilitada:
 
@@ -79,126 +63,29 @@ retornar `0` (habilitado).
 
 ---
 
-## 5. Instalar o MediaMTX
+## 4. Instalação Automatizada
+
+Para simplificar o setup, o repositório conta com um script que baixa o MediaMTX,
+instala as dependências, copia as configurações e cria os serviços systemd
+automaticamente.
+
+Execute na pasta raiz do repositório clonado:
 
 ```bash
-cd ~
-ARCH=$(uname -m)
-if [ "$ARCH" = "aarch64" ]; then PKG="arm64v8"; else PKG="armv7"; fi
-
-curl -L -o mediamtx.tar.gz \
-  "https://github.com/bluenviron/mediamtx/releases/latest/download/mediamtx_linux_${PKG}.tar.gz"
-tar -xzf mediamtx.tar.gz
-rm mediamtx.tar.gz
+chmod +x scripts/install.sh
+sudo ./scripts/install.sh
 ```
 
-**Validação:**
+**O que o script faz:**
+1. Instala `ffmpeg` (ferramentas auxiliares), `v4l-utils`, e `libcamera-apps`.
+2. Baixa e instala a versão correta do MediaMTX para sua arquitetura em `/opt/cta-camera/bin`.
+3. Copia `mediamtx.yml` para `/opt/cta-camera/config/`.
+4. Cria e inicia o serviço systemd (`mediamtx.service`).
 
-```bash
-ls ~/mediamtx       # o binário deve existir
-~/mediamtx --help   # deve imprimir a ajuda do MediaMTX
-```
-
----
-
-## 6. Configurar o MediaMTX
-
-Copie o arquivo de configuração do repositório:
-
-```bash
-cp /caminho/do/repo/cta-camera/config/mediamtx.yml ~/mediamtx.yml
-```
-
-Ou crie manualmente:
-
-```bash
-nano ~/mediamtx.yml
-```
-
-> ⚠️ **IMPORTANTE:** edite o arquivo e troque **todas** as senhas de exemplo
-> (`TROCAR_SENHA_FORTE`) por senhas fortes e únicas antes de prosseguir.
-
-A configuração habilita:
-- **RTSP** na porta `8554`
-- **HLS** na porta `8888`
-- **WebRTC** na porta `8889`
-- **Autenticação** para publicação e leitura do stream
-
-Consulte [config/mediamtx.yml](../config/mediamtx.yml) para ver o template
-completo.
-
-**Validação:**
-
-```bash
-# Inicie o MediaMTX manualmente para testar
-~/mediamtx ~/mediamtx.yml &
-# Deve imprimir logs de inicialização sem erros
-# Depois pare com:
-kill %1
-```
-
----
-
-## 7. Script de Captura da Câmera
-
-Copie o script do repositório:
-
-```bash
-cp /caminho/do/repo/cta-camera/scripts/start_camera.sh ~/start_camera.sh
-chmod +x ~/start_camera.sh
-```
-
-> ⚠️ **IMPORTANTE:** edite o script e troque a senha de publicação
-> (`TROCAR_SENHA_FORTE`) pela mesma senha usada em `mediamtx.yml` para o
-> campo `publishPass`.
-
-O script funciona assim:
-
-1. Fica em loop verificando se `/dev/video0` existe.
-2. Quando a câmera é conectada, tenta capturar com H264 nativo (melhor
-   desempenho para Camera Module e algumas webcams).
-3. Se falhar, faz fallback para recodificação via `libx264` com preset
-   `ultrafast` e `zerolatency`.
-
-Consulte [scripts/start_camera.sh](../scripts/start_camera.sh) para ver o
-script completo.
-
-**Validação:** execute `~/start_camera.sh` manualmente — sem câmera, deve
-imprimir `"Aguardando câmera em /dev/video0..."` em loop.
-
----
-
-## 8. Criar os Serviços systemd
-
-Copie os arquivos de serviço do repositório:
-
-```bash
-sudo cp /caminho/do/repo/cta-camera/systemd/mediamtx.service /etc/systemd/system/
-sudo cp /caminho/do/repo/cta-camera/systemd/camera.service /etc/systemd/system/
-```
-
-Ative e inicie:
-
-```bash
-sudo systemctl daemon-reload
-sudo systemctl enable mediamtx camera
-sudo systemctl start mediamtx camera
-```
-
-Os serviços garantem:
-
-| Recurso | Descrição |
-|---|---|
-| **Auto-start** | Iniciam automaticamente no boot |
-| **Auto-restart** | Reiniciam em 5 segundos se cairem |
-| **Dependência** | `camera.service` só inicia após `mediamtx.service` |
-
-**Validação:**
-
-```bash
-sudo systemctl status mediamtx   # deve estar "active (running)"
-sudo systemctl status camera     # deve estar "active (running)"
-```
+> ⚠️ **IMPORTANTE (Após a instalação):** 
+> Edite o arquivo `/opt/cta-camera/config/mediamtx.yml` caso precise ajustar
+> parâmetros como resolução. Após editar, reinicie o serviço com:
+> `sudo systemctl restart mediamtx`
 
 ---
 
@@ -233,15 +120,7 @@ Execute todos os comandos abaixo e confirme os resultados esperados:
 sudo systemctl status mediamtx
 # Esperado: "active (running)"
 
-# 2. Serviço de câmera em espera
-sudo systemctl status camera
-# Esperado: "active (running)"
-
-# 3. Logs mostrando espera pela câmera
-journalctl -u camera -f
-# Esperado: "Aguardando câmera em /dev/video0..." repetindo
-
-# 4. Tailscale conectado
+# 2. Tailscale conectado
 tailscale status
 # Esperado: Pi listado e online
 ```
@@ -254,8 +133,9 @@ Se tudo estiver correto, o sistema está **pronto para receber a câmera**.
 
 Assim que a câmera física for plugada:
 
-1. O serviço `camera.service` detecta o `/dev/video0` **automaticamente** e
-   inicia a transmissão sozinho (não precisa reiniciar nada).
+1. O MediaMTX detecta a câmera **automaticamente** via API libcamera e inicia 
+   a transmissão local no momento em que alguém acessa (ou de imediato, caso 
+   configure acesso constante).
 
 2. Acesse o live via qualquer dispositivo dentro da rede Tailscale:
 
@@ -263,20 +143,17 @@ Assim que a câmera física for plugada:
 |---|---|---|
 | **HLS** | `http://<IP_TAILSCALE>:8888/lab` | Navegador (compatibilidade ampla) |
 | **WebRTC** | `http://<IP_TAILSCALE>:8889/lab` | Navegador (menor latência) |
-| **RTSP** | `rtsp://usuario:SENHA@<IP_TAILSCALE>:8554/lab` | VLC, apps de câmera |
+| **RTSP** | `rtsp://<IP_TAILSCALE>:8554/lab` | VLC, apps de câmera |
 
 **Validação:**
 
-```bash
-# Verificar que a câmera foi detectada
+# Verificar que a câmera foi detectada pelo sistema
 v4l2-ctl --list-devices
+libcamera-hello --list-cameras
 
-# Verificar que o FFmpeg está rodando
-ps aux | grep ffmpeg
-
-# Verificar logs do serviço
-journalctl -u camera -f
-# Esperado: "Câmera detectada. Iniciando transmissão..."
+# Verificar logs do serviço MediaMTX
+journalctl -u mediamtx -f
+# Esperado: "rtsp server created" e acesso a /lab
 ```
 
 ---
@@ -330,11 +207,11 @@ libcamera-hello --list-cameras
 ### O stream não inicia
 
 ```bash
-# Ver logs detalhados do FFmpeg
-journalctl -u camera -n 50 --no-pager
+# Ver logs detalhados do MediaMTX
+journalctl -u mediamtx -n 50 --no-pager
 
-# Testar FFmpeg manualmente
-ffmpeg -f v4l2 -list_formats all -i /dev/video0
+# Verificar se a câmera está ocupada por outro processo
+lsof /dev/video0
 ```
 
 ### Não consigo acessar remotamente
@@ -355,7 +232,6 @@ ss -tlnp | grep -E '8554|8888|8889'
 ```bash
 # Ver últimas 100 linhas de log
 journalctl -u mediamtx -n 100 --no-pager
-journalctl -u camera -n 100 --no-pager
 ```
 
 ---

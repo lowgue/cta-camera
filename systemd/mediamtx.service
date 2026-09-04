@@ -1,21 +1,21 @@
 [Unit]
 Description=MediaMTX Streaming Server
 Documentation=https://github.com/bluenviron/mediamtx
-After=network.target
-
+After=network-online.target tailscaled.service
+Wants=network-online.target tailscaled.service
 [Service]
 Type=simple
-ExecStart=/home/pi/mediamtx /home/pi/mediamtx.yml
-WorkingDirectory=/home/pi
+ExecStart=/opt/cta-camera/bin/mediamtx /opt/cta-camera/config/mediamtx.yml
+WorkingDirectory=/opt/cta-camera
 Restart=always
 RestartSec=5
-User=pi
+SupplementaryGroups=video
 
-# Hardening básico
+# Hardening básico (compatível com Raspberry Pi OS)
+# Nota: ProtectSystem=strict e ProtectHome=read-only foram removidos
+# porque dependem de mount namespaces, que podem não estar habilitados
+# no kernel do Raspberry Pi (causa erro 226/NAMESPACE).
 NoNewPrivileges=true
-ProtectSystem=strict
-ProtectHome=read-only
-ReadWritePaths=/home/pi
 
 [Install]
 WantedBy=multi-user.target
