@@ -11,7 +11,9 @@
 # precisar de integração com Home Assistant ou
 # alertas externos, pode desabilitar.
 mqtt:
-  enabled: false
+  enabled: true
+  host: mosquitto
+  port: 1883
   # Se quiser ativar futuramente:
   # host: localhost
   # port: 1883

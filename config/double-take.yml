@@ -1,0 +1,37 @@
+# Configuração do Double-Take (Reconhecimento Facial)
+# Documentação oficial: https://github.com/jakowenko/double-take
+
+mqtt:
+  host: mosquitto
+  port: 1883
+  # user: frigate # se configurado no mosquitto
+  # password: TROCAR_SENHA_FORTE
+
+frigate:
+  url: http://frigate:5000
+  # image: # URL interna do frigate
+    # fallback: true
+  attempts:
+    latest: 10
+    snapshot: 0
+
+detectors:
+  deepstack:
+    url: http://deepstack:5000
+    # O timeout padrão às vezes é curto demais para processadores ARM
+    timeout: 30 
+    
+# Opções para filtrar quais imagens enviar para a API (evita sobrecarga)
+detect:
+  match:
+    # Confiança mínima do rosto para considerar "reconhecido"
+    confidence: 70
+    # Processa até o rosto ficar desconhecido ou reconhecido com a confiança acima
+    # purge: true
+
+  # Só analisa eventos das câmeras configuradas no frigate
+  # camera:
+  #   - lab
+
+# Notificações / MQTT: o double-take pode enviar de volta pro MQTT
+# O Frigate usa isso nativamente se configurado

@@ -46,3 +46,37 @@ services:
       timeout: 10s
       retries: 3
       start_period: 60s
+
+  mosquitto:
+    container_name: mosquitto
+    image: eclipse-mosquitto:2
+    restart: unless-stopped
+    ports:
+      - "1883:1883"
+    volumes:
+      - ./config/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+
+  deepstack:
+    container_name: deepstack
+    # Imagem específica para processadores ARM64 (Raspberry Pi 4/5)
+    image: deepquestai/deepstack:arm64-cpu
+    restart: unless-stopped
+    ports:
+      - "5001:5000"
+    environment:
+      - VISION-FACE=True
+      # - TZ=America/Sao_Paulo
+
+  double-take:
+    container_name: double-take
+    image: jakowenko/double-take
+    restart: unless-stopped
+    volumes:
+      - ./config/double-take.yml:/double-take/.double-take/config.yml:ro
+      - ./storage/double-take:/.storage
+    ports:
+      - "3000:3000"
+    depends_on:
+      - frigate
+      - mosquitto
+      - deepstack

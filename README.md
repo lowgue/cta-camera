@@ -37,8 +37,9 @@ com acesso remoto exclusivo via **Tailscale** (zero exposição pública).
 - [x] Serviço systemd com integração Tailscale (auto-start + auto-restart)
 - [x] Runbook completo de instalação (Etapa 1)
 - [x] Frigate NVR — config + runbook (Etapa 2)
+- [x] Reconhecimento facial — Double-Take + DeepStack (Etapa 3)
 - [ ] Câmera física conectada
-- [ ] Reconhecimento facial + mapeamento de permanência
+- [ ] Mapeamento de permanência (relatórios)
 
 ## Quick Start
 
@@ -92,10 +93,10 @@ cta-camera/
 |---|---|---|
 | **1 — Streaming** | [RUNBOOK.md](docs/RUNBOOK.md) | MediaMTX + câmera + Tailscale |
 | **2 — Detecção** | [RUNBOOK-FRIGATE.md](docs/RUNBOOK-FRIGATE.md) | Frigate NVR + detecção de pessoa + gravação |
+| **3 — Reconhecimento Facial** | [RUNBOOK-FACIAL.md](docs/RUNBOOK-FACIAL.md) | Integração Double-Take e DeepStack |
 
 ### Próxima Etapa
 
-- Reconhecimento facial — identificar quem é a pessoa
 - Mapeamento de permanência — tempo de cada pessoa no lab
 - Alertas — notificações via Telegram/email
 
