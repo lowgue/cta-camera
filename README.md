@@ -35,9 +35,9 @@ com acesso remoto exclusivo via **Tailscale** (zero exposição pública).
 - [x] Streaming nativo via rpiCamera integrado
 - [x] Configuração do MediaMTX (HLS + WebRTC)
 - [x] Serviço systemd com integração Tailscale (auto-start + auto-restart)
-- [x] Runbook completo de instalação
+- [x] Runbook completo de instalação (Etapa 1)
+- [x] Frigate NVR — config + runbook (Etapa 2)
 - [ ] Câmera física conectada
-- [ ] Frigate NVR (detecção de pessoa + gravação por evento)
 - [ ] Reconhecimento facial + mapeamento de permanência
 
 ## Quick Start
@@ -71,25 +71,33 @@ Após conectar a câmera e com Tailscale ativo:
 ```
 cta-camera/
 ├── README.md                  # Este arquivo
+├── docker-compose.yml         # Docker Compose do Frigate NVR
 ├── docs/
-│   ├── RUNBOOK.md             # Guia completo de instalação
+│   ├── RUNBOOK.md             # Etapa 1 — Streaming (MediaMTX + Tailscale)
+│   ├── RUNBOOK-FRIGATE.md     # Etapa 2 — Detecção (Frigate NVR)
 │   └── SECURITY.md            # Notas de segurança e LGPD
 ├── config/
-│   └── mediamtx.yml           # Configuração do MediaMTX
+│   ├── mediamtx.yml           # Configuração do MediaMTX
+│   └── frigate.yml            # Configuração do Frigate NVR
 ├── scripts/
 │   └── install.sh             # Script de instalação automatizada
+├── storage/                   # Gravações e snapshots (não commitado)
 └── systemd/
     └── mediamtx.service       # Serviço systemd do MediaMTX
 ```
 
-## Próxima Etapa
+## Etapas
 
-Instalar o **Frigate NVR** apontando para o stream RTSP local
-(`rtsp://localhost:8554/lab`) para:
+| Etapa | Runbook | Descrição |
+|---|---|---|
+| **1 — Streaming** | [RUNBOOK.md](docs/RUNBOOK.md) | MediaMTX + câmera + Tailscale |
+| **2 — Detecção** | [RUNBOOK-FRIGATE.md](docs/RUNBOOK-FRIGATE.md) | Frigate NVR + detecção de pessoa + gravação |
 
-- Detecção de pessoa via IA
-- Gravação automática por evento
-- Base para reconhecimento facial e mapeamento de permanência
+### Próxima Etapa
+
+- Reconhecimento facial — identificar quem é a pessoa
+- Mapeamento de permanência — tempo de cada pessoa no lab
+- Alertas — notificações via Telegram/email
 
 ## Segurança
 

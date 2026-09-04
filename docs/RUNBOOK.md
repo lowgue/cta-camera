@@ -236,14 +236,19 @@ journalctl -u mediamtx -n 100 --no-pager
 
 ---
 
-## 14. Próxima Etapa (Fora Deste Runbook)
+## 14. Próxima Etapa — Frigate NVR
 
-Com o live estável, o próximo passo é instalar o **Frigate NVR** apontando
-para este mesmo stream RTSP (`rtsp://localhost:8554/lab`), para adicionar:
+Com o live estável, o próximo passo é instalar o **Frigate NVR** para
+detecção inteligente e gravação automática.
 
-- Detecção de pessoa via IA
-- Gravação automática a partir do momento em que detecta alguém
-- Base para reconhecimento facial e mapeamento de tempo de permanência
+👉 Siga o **[Runbook do Frigate](RUNBOOK-FRIGATE.md)** para:
+
+- Instalar Docker no Raspberry Pi
+- Configurar o Frigate apontando para o stream RTSP local
+- Ativar detecção de pessoa via IA
+- Gravação automática apenas quando há movimento
+- Interface web para visualizar eventos e snapshots
+- Base para reconhecimento facial e mapeamento de permanência
 
 ---
 
