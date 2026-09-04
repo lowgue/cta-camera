@@ -59,7 +59,7 @@ services:
   deepstack:
     container_name: deepstack
     # Imagem específica para processadores ARM64 (Raspberry Pi 4/5)
-    image: deepquestai/deepstack:arm64-cpu
+    image: deepquestai/deepstack:arm64-2022.01.1
     restart: unless-stopped
     ports:
       - "5001:5000"
